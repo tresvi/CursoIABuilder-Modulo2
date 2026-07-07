@@ -3,15 +3,24 @@ import { parseEcgCsv } from './ecg/parseEcgCsv';
 import type { EcgSignal } from './ecg/types';
 import { EcgChart } from './ecg/EcgChart';
 import { computeMetrics, type TimeRange } from './ecg/metrics';
+import { filterSignal, type FilterParams } from './ecg/filterApi';
 import { FileLoader } from './components/FileLoader';
 import { MetricsPanel } from './components/MetricsPanel';
+import { FilterPanel } from './components/FilterPanel';
 import './App.css';
 
 export default function App() {
+  // `signal` es siempre la señal original cargada; `filtered` es la versión
+  // filtrada (null = mostrando la original). Nunca se muta la original (RF-04).
   const [signal, setSignal] = useState<EcgSignal | null>(null);
+  const [filtered, setFiltered] = useState<EcgSignal | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filterError, setFilterError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [range, setRange] = useState<TimeRange | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const displayed = filtered ?? signal;
 
   async function handleFile(file: File) {
     setFileName(file.name);
@@ -20,25 +29,50 @@ export default function App() {
     if (result.ok) {
       setSignal(result.signal);
       setError(null);
-      // El gráfico re-emite el rango completo al montarse.
+      // Nuevo archivo: se limpian filtro, zoom y errores previos.
+      setFiltered(null);
+      setFilterError(null);
       setRange(null);
     } else {
       // AC-02: ante formato inválido no se dibuja ningún gráfico.
       setSignal(null);
+      setFiltered(null);
       setError(result.error);
+      setFilterError(null);
       setRange(null);
     }
   }
 
-  // Las métricas se recalculan cuando cambia la señal o la ventana visible (AC-14).
+  // Siempre se filtra la señal ORIGINAL (los filtros no se acumulan); revertir
+  // vuelve a la original (AC-10). No modifica destructivamente la señal.
+  async function applyFilter(params: FilterParams) {
+    if (!signal) return;
+    setBusy(true);
+    setFilterError(null);
+    try {
+      const result = await filterSignal(signal, params);
+      setFiltered(result);
+    } catch (e) {
+      setFilterError(e instanceof Error ? e.message : 'Error al filtrar la señal.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function revertFilter() {
+    setFiltered(null);
+    setFilterError(null);
+  }
+
+  // Métricas sobre la señal mostrada y la ventana visible (AC-13/AC-14).
   const metrics = useMemo(() => {
-    if (!signal) return null;
-    return computeMetrics(signal.time, signal.value, range ?? undefined);
-  }, [signal, range]);
+    if (!displayed) return null;
+    return computeMetrics(displayed.time, displayed.value, range ?? undefined);
+  }, [displayed, range]);
 
   const duration =
-    signal && signal.time.length > 0
-      ? signal.time[signal.time.length - 1] - signal.time[0]
+    displayed && displayed.time.length > 0
+      ? displayed.time[displayed.time.length - 1] - displayed.time[0]
       : 0;
 
   return (
@@ -58,14 +92,28 @@ export default function App() {
         </div>
       )}
 
-      {signal && metrics && (
+      {displayed && metrics && (
         <>
           <section className="app__chart" aria-label="Gráfico ECG">
             <p className="app__meta">
-              {signal.value.length.toLocaleString('es')} muestras · {duration.toFixed(2)} s
+              {displayed.value.length.toLocaleString('es')} muestras · {duration.toFixed(2)} s
+              {filtered && ' · filtrada'}
             </p>
-            <EcgChart signal={signal} onVisibleRangeChange={setRange} />
+            <EcgChart signal={displayed} onVisibleRangeChange={setRange} />
           </section>
+
+          <FilterPanel
+            onApply={applyFilter}
+            onRevert={revertFilter}
+            isFiltered={filtered !== null}
+            busy={busy}
+          />
+          {filterError && (
+            <div className="app__error" role="alert">
+              {filterError}
+            </div>
+          )}
+
           <MetricsPanel metrics={metrics} range={range} />
         </>
       )}

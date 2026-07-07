@@ -1,0 +1,6 @@
+@ECGViewer.Api_HostAddress = http://localhost:5201
+
+GET {{ECGViewer.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

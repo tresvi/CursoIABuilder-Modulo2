@@ -80,6 +80,64 @@
   width: 100%;
 }
 
+.filters {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.filters h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.filters__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.filters__field select,
+.filters__field input {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #c9c9c9;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.filters__field input {
+  width: 8rem;
+}
+
+.filters__row button {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #c9c9c9;
+  background: #f7f7f7;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.filters__row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filters__status {
+  margin: 0.6rem 0 0;
+  color: #555;
+  font-size: 0.85rem;
+}
+
 .metrics {
   margin-top: 1.5rem;
   padding-top: 1rem;
