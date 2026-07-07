@@ -7,6 +7,11 @@ Orientada a entornos educativos y de investigación en ingeniería biomédica.
 - Back: .NET 10. Ubicado en `src/back`.
 - Base de datos: SQLite (para usuarios/contraseñas y sesiones).
 
+### Dependencias NuGet (back)
+Versiones exactas viven en el `.csproj`; acá solo el "qué y por qué".
+- `FftSharp` (Scott Harden): cálculos de filtros DSP (pasa bajo/alto/banda/notch) — RF-04.
+- `ClosedXML` y `DocumentFormat.OpenXml`: manipulación y creación de archivos Excel `.xlsx` (import/export) — RF-05.
+
 ## Cómo correr
 Estructura: en la raíz hay una carpeta `src` con `src/front` (frontend) y `src/back` (backend).
 
