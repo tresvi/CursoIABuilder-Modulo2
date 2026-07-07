@@ -4,9 +4,16 @@ import type { EcgSignal } from './ecg/types';
 import { EcgChart } from './ecg/EcgChart';
 import { computeMetrics, type TimeRange } from './ecg/metrics';
 import { filterSignal, type FilterParams } from './ecg/filterApi';
+import {
+  createMarker,
+  updateLabel,
+  removeMarker,
+  type EcgMarker,
+} from './ecg/markers';
 import { FileLoader } from './components/FileLoader';
 import { MetricsPanel } from './components/MetricsPanel';
 import { FilterPanel } from './components/FilterPanel';
+import { MarkersPanel } from './components/MarkersPanel';
 import './App.css';
 
 export default function App() {
@@ -19,6 +26,9 @@ export default function App() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [range, setRange] = useState<TimeRange | null>(null);
   const [busy, setBusy] = useState(false);
+  // Marcadores de evento (RF-02). Viven en memoria durante la sesión.
+  const [markers, setMarkers] = useState<EcgMarker[]>([]);
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
   const displayed = filtered ?? signal;
 
@@ -29,10 +39,12 @@ export default function App() {
     if (result.ok) {
       setSignal(result.signal);
       setError(null);
-      // Nuevo archivo: se limpian filtro, zoom y errores previos.
+      // Nuevo archivo: se limpian filtro, zoom, marcadores y errores previos.
       setFiltered(null);
       setFilterError(null);
       setRange(null);
+      setMarkers([]);
+      setSelectedMarkerId(null);
     } else {
       // AC-02: ante formato inválido no se dibuja ningún gráfico.
       setSignal(null);
@@ -40,7 +52,25 @@ export default function App() {
       setError(result.error);
       setFilterError(null);
       setRange(null);
+      setMarkers([]);
+      setSelectedMarkerId(null);
     }
+  }
+
+  // Marcadores (RF-02): crear en un instante, seleccionar, editar y borrar.
+  function handleCreateMarker(time: number) {
+    const marker = createMarker(time);
+    setMarkers((prev) => [...prev, marker]);
+    setSelectedMarkerId(marker.id);
+  }
+
+  function handleUpdateMarkerLabel(id: string, label: string) {
+    setMarkers((prev) => updateLabel(prev, id, label));
+  }
+
+  function handleDeleteMarker(id: string) {
+    setMarkers((prev) => removeMarker(prev, id));
+    setSelectedMarkerId((current) => (current === id ? null : current));
   }
 
   // Siempre se filtra la señal ORIGINAL (los filtros no se acumulan); revertir
@@ -99,8 +129,23 @@ export default function App() {
               {displayed.value.length.toLocaleString('es')} muestras · {duration.toFixed(2)} s
               {filtered && ' · filtrada'}
             </p>
-            <EcgChart signal={displayed} onVisibleRangeChange={setRange} />
+            <EcgChart
+              signal={displayed}
+              onVisibleRangeChange={setRange}
+              markers={markers}
+              selectedMarkerId={selectedMarkerId}
+              onCreateMarker={handleCreateMarker}
+              onSelectMarker={setSelectedMarkerId}
+            />
           </section>
+
+          <MarkersPanel
+            markers={markers}
+            selectedId={selectedMarkerId}
+            onSelect={setSelectedMarkerId}
+            onUpdateLabel={handleUpdateMarkerLabel}
+            onDelete={handleDeleteMarker}
+          />
 
           <FilterPanel
             onApply={applyFilter}
