@@ -74,6 +74,57 @@
 .ecg-chart__hint {
   color: #777;
   font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+
+.ecg-chart__tools {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.ecg-chart__tools .tool {
+  padding: 0.35rem 0.7rem;
+}
+
+.ecg-chart__tools .tool--active {
+  background: #1f6feb;
+  border-color: #1f6feb;
+  color: #fff;
+}
+
+.ecg-chart__grid-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.measure {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #f6f9ff;
+  border: 1px solid #d9e6ff;
+  border-radius: 8px;
+}
+
+.measure__row {
+  margin: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.measure__row button {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid #c9c9c9;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
 }
 
 .ecg-chart__canvas {
